@@ -18,7 +18,7 @@ if(userIndex>-1){
 }
 if(!emailValidator.validate(email)){
     console.log("Email is not verified")
-}
+} 
 
 if(  String(phone).length!=10){
    return res.status(401).json({message:"phone is not in 10 digit"})

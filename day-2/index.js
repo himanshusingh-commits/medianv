@@ -29,6 +29,7 @@ app.post('/file', async (req, res) => {
 app.get('/file', async (req, res) => {
     try {
         const data = await fsPromises.readFile(filePath, 'utf-8');
+        console.log(' data: ',  data);
         res.status(200).json({ message: "File retrieved successfully", content: data });
     } catch (error) {
       
