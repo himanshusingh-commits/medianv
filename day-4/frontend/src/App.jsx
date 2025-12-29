@@ -167,7 +167,7 @@ const App = () => {
                     <button className="btn-edit" onClick={() => handleEdit(p)}>Edit</button>
                     <button className="btn-delete" onClick={() => handleDelete(p.id)}>Delete</button>
                   </td>
-                </tr>
+                </tr>             
               ))
             )}
           </tbody>
