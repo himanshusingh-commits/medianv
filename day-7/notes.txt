@@ -1,0 +1,151 @@
+Here are comprehensive study notes for PostgreSQL, structured to help you grasp the core concepts quickly. I have used a consistent E-commerce example (Customers and Orders) throughout so you can see how these concepts work together.
+
+Prerequisite: The Example Schema
+Imagine we have two simple tables.
+
+1. Customers Table (customers) | id | name | email | city | | :--- | :--- | :--- | :--- | | 1 | Rahul | rahul@gmail.com | Delhi | | 2 | Anjali | anjali@yahoo.com | Mumbai |
+
+2. Orders Table (orders) | id | amount | customer_id | status | | :--- | :--- | :--- | :--- | | 101 | 5000 | 1 | Shipped | | 102 | 2000 | 1 | Pending |
+
+1. Joins
+Concept: joins allow you to combine rows from two or more tables based on a related column between them.
+
+INNER JOIN: Returns records that have matching values in both tables. (e.g., Only customers who have placed an order).
+
+LEFT JOIN: Returns all records from the left table, and the matched records from the right table. (e.g., All customers, even those who haven't ordered anything yet).
+
+
+Shutterstock
+Example (Inner Join): Get a list of customers and what they ordered.
+
+SQL
+
+SELECT customers.name, orders.amount 
+FROM customers 
+INNER JOIN orders ON customers.id = orders.customer_id;
+Key Takeaway: Always use INNER JOIN when you need strict matches. 
+Use LEFT JOIN when you want to keep the main list (like Users) intact regardless of related data.
+
+2. Indexes
+Concept: An index is like the "Index" section at the back of a textbook.
+Instead of scanning the whole book (table) to find a topic, 
+the database looks at the index to find the exact page (row) instantly.
+
+Why use it? drastically speeds up SELECT queries. 
+Downside: Slows down INSERT and UPDATE slightly (because the index must be updated too).
+
+Example: If you frequently search for users by email:
+
+SQL
+
+-- Without index: Postgres scans every row.
+-- With index: Postgres jumps directly to the email.
+CREATE INDEX idx_users_email ON customers(email);
+Key Takeaway: Add indexes on columns you use frequently in WHERE, JOIN, or ORDER BY clauses.
+
+3. Views
+Concept: A View is a "Virtual Table." It doesn't store data itself; it saves a complex SQL query as a shortcut.
+
+Why use it?
+
+Simplicity: You don't have to write complex Joins every time.
+
+Security: You can create a view that hides sensitive columns (like passwords) and give access to that view instead of the table.
+
+Example: Create a view for "High Value Orders" so you don't have to filter every time.
+
+SQL
+
+CREATE VIEW expensive_orders AS
+SELECT name, amount 
+FROM customers 
+JOIN orders ON customers.id = orders.customer_id
+WHERE orders.amount > 3000;
+
+-- Now you can just query the view:
+SELECT * FROM expensive_orders;
+4. Transactions (ACID)
+Concept: A transaction ensures that a group of SQL commands either all succeed or all fail. It prevents data corruption.
+
+The ACID Property:
+
+Atomicity: All or nothing.
+
+Consistency: Data remains valid.
+
+Isolation: Transactions don't interfere with each other.
+
+Durability: Saved changes survive a crash.
+
+Example (Bank Transfer): You are transferring ₹500 from Rahul to Anjali. You must subtract from Rahul AND add to Anjali. If the power goes out halfway, you don't want Rahul to lose money without Anjali receiving it.
+
+SQL
+
+BEGIN; -- Start the transaction
+
+UPDATE accounts SET balance = balance - 500 WHERE name = 'Rahul';
+UPDATE accounts SET balance = balance + 500 WHERE name = 'Anjali';
+
+COMMIT; -- Save changes (Use ROLLBACK; to cancel if there is an error)
+
+BEGIN; 
+
+UPDATE emp SET salary = salary - 500 WHERE username = 'Pooja';
+
+UPDATE emp SET salary = salary + 500 WHERE username = 'aaaa';
+
+
+SELECT username, salary FROM emp WHERE username IN ('Pooja', 'aaaa');
+
+ROLLBACK;
+
+SELECT username, salary FROM emp WHERE username = 'Pooja';
+5. Stored Procedures (and Functions)
+Concept: This is code written in SQL that is stored inside the database. It allows you to reuse logic without writing it in your Node.js/backend code every time.
+
+Functions: Return a value. Used in queries.
+
+Procedures: Can handle transactions (Commit/Rollback) inside them.
+
+Example: A procedure to add a new customer securely.
+
+SQL
+
+CREATE OR REPLACE PROCEDURE add_customer(p_name TEXT, p_email TEXT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    INSERT INTO customers (name, email) VALUES (p_name, p_email);
+END;
+$$;
+
+-- To run it:
+CALL add_customer('Rohan', 'rohan@test.com');
+6. Triggers
+Concept: A Trigger is a piece of code that automatically fires (executes) when an event happens (Insert, Update, or Delete).
+
+Common Use Case: Automatically updating a last_updated_at timestamp or logging deleted data for audit history.
+
+Example: Automatically log when an order is deleted.
+
+Create the function first:
+
+SQL
+
+CREATE OR REPLACE FUNCTION log_deletion() RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO audit_log(info) VALUES ('Order deleted: ' || OLD.id);
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+Attach the trigger to the table:
+
+SQL
+
+CREATE TRIGGER trigger_delete_log
+AFTER DELETE ON orders
+FOR EACH ROW
+EXECUTE FUNCTION log_deletion();
+
+
+execution of salary of maximum there is very slow
