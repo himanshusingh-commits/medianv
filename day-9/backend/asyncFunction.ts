@@ -18,7 +18,7 @@ async function fetchAndProcessData(): Promise<string>{
 }
 async function main() {
   console.log("Before calling fetchAndProcessData");
-  const data = await fetchAndProcessData(); // 'await' pauses main until fetchAndProcessData resolves
+  const data = await fetchAndProcessData();
   console.log("Processed data in main:", data);
   console.log("After calling fetchAndProcessData");
 }
